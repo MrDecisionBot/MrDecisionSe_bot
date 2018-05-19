@@ -1,0 +1,23 @@
+{
+  "name": "mrdecisionse_bot",
+  "version": "0.0.1",
+  "description": "mrDecision Second Edtion",
+  "main": "app.js",
+  "dependencies": {
+    "moment": "^2.22.1",
+    "telegraf": "^3.21.1",
+    "winston": "^2.4.2",
+    "winston-daily-rotate-file": "^3.1.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://4582@bitbucket.org/4582/mrdecisionse_bot.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "homepage": "https://bitbucket.org/4582/mrdecisionse_bot#readme"
+}
