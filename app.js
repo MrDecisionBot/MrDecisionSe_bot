@@ -1,42 +1,17 @@
-const Telegraf = require('telegraf')
-// Logger
-var winston = require('winston');
-const moment = require('moment');
-const tsFormat = () => moment().format('YYYY-MM-DD hh:mm:ss').trim();
-
-var logger = new (winston.Logger)({
-    transports: [
-      new (winston.transports.Console)({
-       timestamp: tsFormat,
-       colorize: true,
-       level: 'info'
-     }),
-      new (require('winston-daily-rotate-file'))({
-        level: 'info',
-        filename: 'logs/bot-%DATE%.log',
-        timestamp: tsFormat,
-        datePattern: 'YYYY-MM-DD-HH',
-        prepend: true,
-      })
-    ]
-  });
-
+const { Telegraf } = require('telegraf')
+// config.sample.js 파일을 참조해주십시요.
 const config = require('./config.js');
 const bot = new Telegraf(config.token)
 
-var mrDecisionBot = require('./mrDecisionBot.js');
+const mrDecisionBot = require('./mrDecisionBot.js');
 
-bot.start((ctx) => ctx.reply('Welcome!'))
+bot.start((ctx) => ctx.reply(mrDecisionBot.helpMessage))
 bot.help((ctx) => ctx.reply(mrDecisionBot.helpMessage))
 bot.command('/about', (ctx) => ctx.reply(mrDecisionBot.aboutText))
+bot.catch((err) => { console.error('Telegram Error : ', err) })
 bot.on('text', (ctx) => {
-  // Explicit usage
-  var response = mrDecisionBot.process(ctx);
-  // Using shortcut
-  if (response !== null) {
-    logger.log('info', response);
-    ctx.reply(response)
-  }
+  let response = mrDecisionBot.process(ctx);  
+  ctx.reply(response.a)
 })
 
 bot.startPolling()

@@ -1,4 +1,4 @@
-var explicitCommands = [
+const explicitCommands = [
     { command: /^김결정!+\s?/, behavior: 'customPick' },
     { command: /^결정아!+\s?/, behavior: 'customPick' },
     { command: /^김결쩡!+\s?/, behavior: 'customPick' },
@@ -11,7 +11,7 @@ var explicitCommands = [
     { command: /^김결잔!+\s?/, behavior: 'customPick' }
 ];
 
-var fallbackTexts = [
+const fallbackTexts = [
   '귀찮으니깐 말 좀 그만 걸어',
   '그만해라',
   '오빠 바쁘다',
@@ -26,7 +26,7 @@ var fallbackTexts = [
   '나한테 왜 자꾸 이래?'
 ];
 
-var keywordList = [
+const keywordList = [
     { keyword: /(\S*)해\s?말어\S*$/, behavior: 'pickOne', parameter: ['$해', '말어', '$하자', '말자', '$해라', '$하지 마', '$해', '$하지 마'] },
     { keyword: /(\S*)해\s?말아\S*$/, behavior: 'pickOne', parameter: ['$해', '말아', '$하자', '말자', '$해라', '$하지 마', '$해', '$하지 마'] },
     { keyword: /(\S*)사\s?말어\S*$/, behavior: 'pickOne', parameter: ['$사', '말어', '$사자', '말자', '$사라', '$사지 마', '$사', '$사지 마'] },
@@ -96,7 +96,7 @@ var keywordList = [
     { keyword: /결정이/, behavior: 'fallback' }
 ];
 
-var irregularTable = [
+const irregularTable = [
     /* ..하다 */
     /* $냐 */ { pattern: /하$/, fix: '해' },
     /* $냐 */ { pattern: /하라$/, fix: '해라' },
@@ -1106,67 +1106,92 @@ var irregularTable = [
     /* $도 */ { pattern: /말아든지$/, fix: '말든지' },
 ];
 
-var handleIrregulars = function(text) {
-    for (var i = 0; i < irregularTable.length; i++) {
-        var regex = new RegExp(irregularTable[i].pattern);
-        var match = text.match(regex);
+const handleIrregulars = function(text) {
+    for (let i = 0; i < irregularTable.length; i++) {
+        let regex = new RegExp(irregularTable[i].pattern);
+        let match = text.match(regex);
         if (match === null) continue;
         return (match.length > 1 ? text.replace(regex, '$1' + irregularTable[i].fix) : text.replace(regex, irregularTable[i].fix));
     }
     return text;
 };
 
-var behaviors = {
+const behaviors = {
     pickOne: function(matchResult, list) {
-        var response = list[Math.floor(Math.random() * list.length)].replace('$', matchResult[1]);
-        return handleIrregulars(response)
+        let tmpResult = {};
+        tmpResult.q = matchResult.input;
+        let response = list[Math.floor(Math.random() * list.length)].replace('$', matchResult[1]);
+        tmpResult.a = handleIrregulars(response)
+        return tmpResult;
     },
 
     customPick: function(matchResult) {
-        var optionText = matchResult.input.slice(matchResult[0].length + matchResult.index).trim();
-        var options = optionText.split(',');
+        let tmpResult = {};
+        tmpResult.q = matchResult.input;
+        let optionText = matchResult.input.slice(matchResult[0].length + matchResult.index).trim();
+        let options = optionText.split(',');
         if (options.length <= 1) {
             options = optionText.split(' ');
         }
         if(options.length <= 1) {
-          return Math.random() < 0.2 ? fallbackTexts[Math.floor(Math.random() * fallbackTexts.length)] : null;
+//          return fallbackTexts[Math.floor(Math.random() * fallbackTexts.length)].trim();
+          tmpResult.a = fallbackTexts[Math.floor(Math.random() * fallbackTexts.length)].trim();
+          return tmpResult;
         }
-        return options[Math.floor(Math.random() * options.length)].trim();
+//        return options[Math.floor(Math.random() * options.length)].trim();
+        tmpResult.a = options[Math.floor(Math.random() * options.length)].trim();
+        return tmpResult;
     },
 
-    fallback: function() {
-      return Math.random() < 0.2 ? fallbackTexts[Math.floor(Math.random() * fallbackTexts.length)] : null;
+    fallback: function(matchResult) {
+      let tmpResult = {};
+      tmpResult.q = matchResult.input;
+//      return fallbackTexts[Math.floor(Math.random() * fallbackTexts.length)].trim();
+      tmpResult.a = fallbackTexts[Math.floor(Math.random() * fallbackTexts.length)].trim();
+      return tmpResult;
     }
 };
 
-var checkKeywordAndGetResponse = function(text) {
+const checkKeywordAndGetResponse = function(text) {
+    let retData = null;
     if (text === undefined) return null;
 
     // Check explicit commands first
-    for (var i = 0; i < explicitCommands.length; i++) {
-        var match = text.trim().match(new RegExp(explicitCommands[i].command));
-        if (match === null) continue;
-        return behaviors[explicitCommands[i].behavior](match, explicitCommands[i].parameter);
+    for (let i = 0; i < explicitCommands.length; i++) {
+        let match = text.trim().match(new RegExp(explicitCommands[i].command));
+        if (match === null) {
+          continue;
+        } else {
+          retData = behaviors[explicitCommands[i].behavior](match, explicitCommands[i].parameter);
+          return retData;
+        }
     }
 
     // Check keywords
-    for (var i = 0; i < keywordList.length; i++) {
-        var match = text.trim().match(new RegExp(keywordList[i].keyword));
-        if (match === null) continue;
-        return behaviors[keywordList[i].behavior](match, keywordList[i].parameter);
+    for (let i = 0; i < keywordList.length; i++) {
+        let match = text.trim().match(new RegExp(keywordList[i].keyword));
+        if (match === null) {
+          continue;
+        } else {
+          retData = behaviors[keywordList[i].behavior](match, keywordList[i].parameter);
+          return retData;
+        }
     }
     return null;
 };
 
-var mrDecisionBot = {
+const mrDecisionBot = {
     process: function(update) {
         if (update.message === null) return null;
-        var message = update.message.text;
+        let message = update.message.text;
         return checkKeywordAndGetResponse(message);
     },
-
+    discord: function(content) {
+        if (content === null) return null;        
+        return checkKeywordAndGetResponse(content);
+    },
     helpMessage: '돌아온 김결정이다.\n말이 많진 않지만 결정적인 순간에 한마디 하는 성격이다.\n귀찮으니깐 웬만하면 말 걸지 마라.\n꼭 내가 결정해야겠는 일이 있으면 "김결정! 부먹 찍먹 중립" 이런 식으로 물어보도록.\n잘 부탁한다.',
-    aboutText: 'https://github/studionabu'
+    aboutText: 'https://twitter.com/MrDecision_bot'
 };
 
 module.exports = mrDecisionBot;
